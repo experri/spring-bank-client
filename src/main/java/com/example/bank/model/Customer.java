@@ -1,9 +1,13 @@
 package com.example.bank.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Component
 public class Customer {
 
     private Long id = IdGen.generateCustomerId();
@@ -11,6 +15,8 @@ public class Customer {
     private String name;
     private String email;
     private Integer age;
+
+    @JsonManagedReference
     private List<Account> accounts = new ArrayList<>();
 
     public Customer() {}

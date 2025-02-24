@@ -3,6 +3,7 @@ package com.example.bank.controller;
 
 import com.example.bank.dto.AccountDTO;
 import com.example.bank.dto.CustomerDTO;
+import com.example.bank.entity.MessageResponse;
 import com.example.bank.model.Account;
 import com.example.bank.model.Customer;
 import com.example.bank.service.AccountService;
@@ -49,7 +50,7 @@ public class CustomerController {
         return ResponseEntity.ok(customer);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public  ResponseEntity<Object> createCustomer(@RequestBody CustomerDTO customerDTO) {
         Customer customer = new Customer(customerDTO.getName(), customerDTO.getEmail(), customerDTO.getAge());
 
@@ -88,7 +89,7 @@ public class CustomerController {
         customerService.deleteAccount(id, accountId);
         accountService.delete(accountId);
 
-        return ResponseEntity.ok("Account deleted");
+        return ResponseEntity.ok(new MessageResponse("Account deleted"));
     }
 
 }

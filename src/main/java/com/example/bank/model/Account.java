@@ -1,10 +1,13 @@
 package com.example.bank.model;
 
 import com.example.bank.enums.Currency;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@Component
 public class Account {
 
    private Long id = IdGen.generateAccountId();
@@ -13,7 +16,9 @@ public class Account {
 
    private Currency currency;
    private Double balance = 0.0;
-   private Customer customer;
+
+    @JsonBackReference
+    private Customer customer;
 
     public Account() {}
 

@@ -1,7 +1,6 @@
 package com.example.bank.dao;
 
 import com.example.bank.model.Account;
-import com.example.bank.model.Customer;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;

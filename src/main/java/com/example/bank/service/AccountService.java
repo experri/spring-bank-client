@@ -5,8 +5,6 @@ import com.example.bank.exception.CustomException;
 import com.example.bank.model.Account;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class AccountService {
 
