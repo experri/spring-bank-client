@@ -1,0 +1,48 @@
+server:
+  port: 9000
+#  debug: true
+
+spring:
+  application:
+    name: bank
+
+  profiles:
+    active: prod
+---
+spring.config.activate.on-profile: local
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: root
+    password: 2323
+    initialization-mode: always
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+---
+spring.config.activate.on-profile: prod
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:mysql://mysql-3372cd81-spring-rest.d.aivencloud.com:11981/testdb?sessionVariables=sql_require_primary_key=OFF
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${DB_PASSWORD}
+
+    jpa:
+      database-platform: org.hibernate.dialect.MySQLDialect
+      show-sql: true
+      hibernate:
+        ddl-auto: update

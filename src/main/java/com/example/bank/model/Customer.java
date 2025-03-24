@@ -1,23 +1,34 @@
 package com.example.bank.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import org.springframework.stereotype.Component;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
-@Component
-public class Customer {
+@Entity
+@Table(name = "customers")
+public class Customer extends AbstractEntity{
 
-    private Long id = IdGen.generateCustomerId();
 
     private String name;
-    private String email;
-    private Integer age;
 
-    @JsonManagedReference
-    private List<Account> accounts = new ArrayList<>();
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private Integer age;
+    @ManyToMany
+    @JoinTable(
+            name = "customer_employer",
+            joinColumns = @JoinColumn(name = "customer_id"),
+            inverseJoinColumns = @JoinColumn(name = "employer_id")
+    )
+    private Set<Employer> employers;
+
+    @OneToMany(mappedBy = "customer")
+    private Set<Account> accounts;
 
     public Customer() {}
 
@@ -27,13 +38,6 @@ public class Customer {
         this.age = age;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -59,11 +63,19 @@ public class Customer {
         this.age = age;
     }
 
-    public List<Account> getAccounts() {
+    public Set<Employer> getEmployers() {
+        return employers;
+    }
+
+    public void setEmployers(Set<Employer> employers) {
+        this.employers = employers;
+    }
+
+    public Set<Account> getAccounts() {
         return accounts;
     }
 
-    public void setAccounts(List<Account> accounts) {
+    public void setAccounts(Set<Account> accounts) {
         this.accounts = accounts;
     }
 
@@ -76,14 +88,13 @@ public class Customer {
             return false;
 
         return age == customer.getAge() &&
-                customer.getId() == id &&
                 customer.getName().equals(name) &&
                 customer.getEmail().equals(email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, email, age);
+        return Objects.hash(name, email, age);
     }
 
     @Override

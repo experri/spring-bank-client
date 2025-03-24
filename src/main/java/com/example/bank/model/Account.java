@@ -2,22 +2,22 @@ package com.example.bank.model;
 
 import com.example.bank.enums.Currency;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import org.springframework.stereotype.Component;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 import java.util.Objects;
 import java.util.UUID;
 
-@Component
-public class Account {
-
-   private Long id = IdGen.generateAccountId();
+@Entity
+public class Account extends AbstractEntity{
 
    private String number = UUID.randomUUID().toString();
 
    private Currency currency;
    private Double balance = 0.0;
 
-    @JsonBackReference
+    @ManyToOne(cascade = CascadeType.ALL)
     private Customer customer;
 
     public Account() {}
@@ -27,13 +27,7 @@ public class Account {
         this.customer = customer;
     }
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getNumber() {
         return number;
@@ -75,7 +69,6 @@ public class Account {
             return false;
 
         return account.getBalance() == balance &&
-                account.getId() == id &&
                 account.getNumber().equals(number) &&
                 account.getCurrency().equals(currency) &&
                 account.getCustomer().equals(customer);
@@ -83,7 +76,7 @@ public class Account {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, number, currency, balance, customer);
+        return Objects.hash(number, currency, balance, customer);
     }
 
     @Override
