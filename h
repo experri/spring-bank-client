@@ -39,7 +39,7 @@ spring:
     url: jdbc:mysql://bank-stepprojecttinder.j.aivencloud.com:18547/bank?sessionVariables=sql_require_primary_key=OFF
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: avnadmin
-    password: ${DB_PASSWORD}
+    password: AVNS_saVDccHwLiRVxoM7bs2
 
     jpa:
       database-platform: org.hibernate.dialect.MySQLDialect
