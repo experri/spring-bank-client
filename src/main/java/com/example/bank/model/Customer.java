@@ -1,17 +1,16 @@
 package com.example.bank.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "customers")
 public class Customer extends AbstractEntity{
-
 
     private String name;
 
@@ -25,10 +24,10 @@ public class Customer extends AbstractEntity{
             joinColumns = @JoinColumn(name = "customer_id"),
             inverseJoinColumns = @JoinColumn(name = "employer_id")
     )
-    private Set<Employer> employers;
+    private Set<Employer> employers = new HashSet<>();
 
-    @OneToMany(mappedBy = "customer")
-    private Set<Account> accounts;
+   @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Account> accounts = new HashSet<>();
 
     public Customer() {}
 
@@ -77,33 +76,5 @@ public class Customer extends AbstractEntity{
 
     public void setAccounts(Set<Account> accounts) {
         this.accounts = accounts;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-
-        if (!(obj instanceof Customer customer))
-            return false;
-
-        return age == customer.getAge() &&
-                customer.getName().equals(name) &&
-                customer.getEmail().equals(email);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, email, age);
-    }
-
-    @Override
-    public String toString() {
-        return "Customer { " +
-                "name: '" + name + '\'' +
-                ", email: '" + email + '\'' +
-                ", age: " + age +
-                ", accounts: " + accounts +
-                " }";
     }
 }

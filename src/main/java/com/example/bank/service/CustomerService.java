@@ -1,81 +1,71 @@
 package com.example.bank.service;
 
-import com.example.bank.dao.AccountDAO;
-import com.example.bank.dao.CustomerDAO;
-import com.example.bank.exception.CustomException;
 import com.example.bank.model.Account;
 import com.example.bank.model.Customer;
+import com.example.bank.repository.AccountRepository;
+import com.example.bank.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CustomerService {
-    private final AccountDAO accountDao;
-    private final CustomerDAO customerDao;
 
-    public CustomerService(AccountDAO accountDao, CustomerDAO customerDao) {
-        this.accountDao = accountDao;
-        this.customerDao = customerDao;
+    private final CustomerRepository customerRepository;
+    private final AccountRepository accountRepository;
+
+
+    public CustomerService(CustomerRepository customerRepository, AccountRepository accountRepository) {
+        this.customerRepository = customerRepository;
+        this.accountRepository = accountRepository;
     }
 
-    public Customer save(Customer customer) {
-        return customerDao.save(customer);
+    public Customer getCustomerById(Long id) {
+        return customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
     }
 
-    public List<Customer> getAll() {
-        return customerDao.findAll();
+    public List<Customer> getAllCustomers() {
+        return customerRepository.findAll();
     }
 
-    public Customer getById(long id) {
-        Customer customer = customerDao.getOne(id);
+    public Customer createCustomer(Customer customer) {
+        return customerRepository.save(customer);
+    }
 
-        if (customer == null) {
-            throw new CustomException("Customer not found");
+    public Customer updateCustomer(Long id, Customer updatedCustomer) {
+        Optional<Customer> existingCustomerOpt = customerRepository.findById(id);
+
+        if (existingCustomerOpt.isPresent()) {
+            Customer existingCustomer = existingCustomerOpt.get();
+
+            existingCustomer.setName(updatedCustomer.getName());
+            existingCustomer.setEmail(updatedCustomer.getEmail()); // Якщо є поле email
+            existingCustomer.setEmployers(updatedCustomer.getEmployers()); // Якщо потрібно оновити список роботодавців
+
+            return customerRepository.save(existingCustomer);
+        } else {
+            throw new RuntimeException("Customer not found with id: " + id); // Якщо клієнт не знайдений
         }
-
-        return customer;
     }
 
-    public Customer getByEmail(String email) {
-        return customerDao.findByEmail(email);
+    public void deleteCustomer(Long id) {
+        customerRepository.deleteById(id);
     }
 
-    public boolean delete(Long id) {
-        boolean isDeleted = customerDao.deleteById(id);
-
-        if (!isDeleted) {
-            throw new CustomException("Customer not found");
-        }
-
-        return true;
+    public Account createAccountForCustomer(Long customerId, Account account) {
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
+        account.setCustomer(customer);
+        Account savedAccount = accountRepository.save(account);
+        customer.getAccounts().add(savedAccount);
+        customerRepository.save(customer);
+        return savedAccount;
     }
 
-    public Customer addAccount(Long customerId, Account account) {
-        Customer customer = customerDao.getOne(customerId);
-
-        if (customer == null) {
-            throw new CustomException("Customer not found");
-        }
-
-        customer.getAccounts().add(account);
-
-        return customer;
-    }
-
-    public void deleteAccount(Long customerId, Long accountId) {
-        Customer customer = customerDao.getOne(customerId);
-
-        if (customer == null) {
-            throw new CustomException("Customer not found");
-        }
-
-        Account account = accountDao.getOne(accountId);
-
-        if (account == null) {
-            throw new CustomException("Account not found");
-        }
-
-        customer.getAccounts().remove(account);
+    public void deleteAccountForCustomer(Long customerId, Long accountId) {
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
+        Account accountToRemove = accountRepository.findById(accountId).orElseThrow(() -> new RuntimeException("Customer not found with id: " + accountId));
+        customer.getAccounts().remove(accountToRemove);
+        accountRepository.delete(accountToRemove);
     }
 }

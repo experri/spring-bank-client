@@ -1,59 +1,54 @@
 package com.example.bank.controller;
 
-import com.example.bank.dto.Transfer;
-import com.example.bank.entity.MessageResponse;
-import com.example.bank.model.Account;
+
 import com.example.bank.service.AccountService;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
+
     private final AccountService accountService;
 
+    @Autowired
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
 
-    @PatchMapping("/transfer")
-    public ResponseEntity<Object> transfer(@RequestBody Transfer transferDTO) {
-        Account accountFrom = accountService.getByNumber(transferDTO.getFromNumber());
-        Account accountTo = accountService.getByNumber(transferDTO.getToNumber());
-
-        if (accountFrom.getBalance() < transferDTO.getAmount()) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new MessageResponse("Not enough money"));
+    @PostMapping("/{accountNumber}/deposit")
+    public ResponseEntity<String> deposit(@PathVariable String accountNumber, @RequestParam double amount) {
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
         }
-
-        accountFrom.setBalance(accountFrom.getBalance() - transferDTO.getAmount());
-        accountTo.setBalance(accountTo.getBalance() + transferDTO.getAmount());
-
-        accountService.save(accountFrom);
-        accountService.save(accountTo);
-
-        return ResponseEntity.ok(new MessageResponse("Transfer successful"));
+        accountService.deposit(accountNumber, amount);
+        return ResponseEntity.ok("Рахунок поповнено на " + amount);
     }
 
-
-    @PatchMapping("/{number}/deposit") public ResponseEntity<Account> deposit(@PathVariable String number, @RequestParam("amount") double amount) {
-        Account account = accountService.getByNumber(number);
-
-        account.setBalance(account.getBalance() + amount);
-
-        return ResponseEntity.ok(accountService.save(account));
+    @PostMapping("/{accountNumber}/withdraw")
+    public ResponseEntity<String> withdraw(@PathVariable String accountNumber, @RequestParam double amount) {
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
+        }
+        try {
+            accountService.withdraw(accountNumber, amount);
+            return ResponseEntity.ok("З рахунку знято " + amount);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @PatchMapping("/{number}/withdraw")
-    public ResponseEntity<Object> withdraw(@PathVariable String number, @RequestParam("amount") double amount) {
-        Account account = accountService.getByNumber(number);
-
-        if (account.getBalance() < amount) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new MessageResponse("Not enough money"));
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transfer(@RequestParam String fromAccountNumber, @RequestParam String toAccountNumber, @RequestParam double amount) {
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
         }
-
-        account.setBalance(account.getBalance() - amount);
-
-        return ResponseEntity.ok(accountService.save(account));
+        try {
+            accountService.transfer(fromAccountNumber, toAccountNumber, amount);
+            return ResponseEntity.ok("Переказано " + amount + " з рахунку " + fromAccountNumber + " на рахунок " + toAccountNumber);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
