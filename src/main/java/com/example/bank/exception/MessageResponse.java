@@ -1,4 +1,4 @@
-package com.example.bank.entity;
+package com.example.bank.exception;
 
 public class MessageResponse {
     private String message;

@@ -1,52 +1,90 @@
 package com.example.bank.service;
 
+import com.example.bank.DTO.CustomerFacade;
+import com.example.bank.DTO.CustomerRequest;
+import com.example.bank.DTO.CustomerResponse;
+import com.example.bank.exception.CustomException;
 import com.example.bank.model.Account;
 import com.example.bank.model.Customer;
+import com.example.bank.model.Employer;
 import com.example.bank.repository.AccountRepository;
 import com.example.bank.repository.CustomerRepository;
+import com.example.bank.repository.EmployerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final AccountRepository accountRepository;
+    private final CustomerFacade customerFacade;
+    private final EmployerRepository employerRepository;
+    private AccountRepository accountRepository;
 
-
-    public CustomerService(CustomerRepository customerRepository, AccountRepository accountRepository) {
+    public CustomerService(CustomerRepository customerRepository, CustomerFacade customerFacade, EmployerRepository employerRepository) {
         this.customerRepository = customerRepository;
-        this.accountRepository = accountRepository;
+        this.customerFacade = customerFacade;
+        this.employerRepository = employerRepository;
     }
 
-    public Customer getCustomerById(Long id) {
-        return customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+    public CustomerResponse getById(long id) {
+        Customer customer = customerRepository.findById(id).orElseThrow(() -> new CustomException("Customer not found"));
+
+        return customerFacade.toResponse(customer);
     }
 
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
-    }
+    public CustomerResponse getByEmail(String email) {
+        Optional<Customer> customer = customerRepository.findByEmail(email);
 
-    public Customer createCustomer(Customer customer) {
-        return customerRepository.save(customer);
-    }
-
-    public Customer updateCustomer(Long id, Customer updatedCustomer) {
-        Optional<Customer> existingCustomerOpt = customerRepository.findById(id);
-
-        if (existingCustomerOpt.isPresent()) {
-            Customer existingCustomer = existingCustomerOpt.get();
-
-            existingCustomer.setName(updatedCustomer.getName());
-            existingCustomer.setEmail(updatedCustomer.getEmail()); // Якщо є поле email
-            existingCustomer.setEmployers(updatedCustomer.getEmployers()); // Якщо потрібно оновити список роботодавців
-
-            return customerRepository.save(existingCustomer);
-        } else {
-            throw new RuntimeException("Customer not found with id: " + id); // Якщо клієнт не знайдений
+        if (customer.isEmpty()) {
+            return null;
         }
+
+        return customerFacade.toResponse(customer.orElse(null));
+    }
+
+    public Page<CustomerResponse> getAll(Pageable pageable) {
+        return customerRepository.findAll(pageable)
+                .map(customerFacade::toResponse);
+    }
+
+    public CustomerResponse save(CustomerRequest customerRequest) {
+        Customer customer = customerFacade.toEntity(customerRequest);
+        Customer savedCustomer = customerRepository.save(customer);
+
+        return customerFacade.toResponse(savedCustomer);
+    }
+
+
+    public CustomerResponse update(long id, CustomerRequest customerRequest) {
+        Customer customer = customerRepository.findById(id).orElseThrow(() -> new CustomException("Customer not found"));
+
+        if (customerRequest.getEmail() != null) {
+            customer.setEmail(customerRequest.getEmail());
+        }
+
+        if (customerRequest.getPassword() != null) {
+            customer.setPassword(customerRequest.getPassword());
+        }
+
+        if (customerRequest.getName() != null) {
+            customer.setName(customerRequest.getName());
+        }
+
+        if (customerRequest.getAge() != null) {
+            customer.setAge(customerRequest.getAge());
+        }
+
+        if (customerRequest.getPhone() != null) {
+            customer.setPhone(customerRequest.getPhone());
+        }
+
+        Customer savedCustomer = customerRepository.save(customer);
+
+        return customerFacade.toResponse(savedCustomer);
     }
 
     public void deleteCustomer(Long id) {
@@ -68,4 +106,13 @@ public class CustomerService {
         customer.getAccounts().remove(accountToRemove);
         accountRepository.delete(accountToRemove);
     }
+
+    public void addEmployerToCustomer(long customerId, long employerId) {
+    Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new CustomException("Customer not found"));
+    Employer employer = employerRepository.findById(employerId).orElseThrow(() -> new CustomException("Employer not found"));
+
+         customer.getEmployers().add(employer);
+         customerRepository.save(customer);
+}
+
 }

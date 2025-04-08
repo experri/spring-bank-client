@@ -2,23 +2,19 @@ package com.example.bank.controller;
 
 
 import com.example.bank.service.AccountService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/accounts")
+@RequiredArgsConstructor
 public class AccountController {
 
     private final AccountService accountService;
 
-    @Autowired
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
-
     @PostMapping("/{accountNumber}/deposit")
-    public ResponseEntity<String> deposit(@PathVariable String accountNumber, @RequestParam double amount) {
+    public ResponseEntity<String> deposit(@PathVariable String accountNumber, @RequestParam("amount") double amount) {
         if (amount <= 0) {
             return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
         }
