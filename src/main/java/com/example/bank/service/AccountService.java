@@ -5,6 +5,7 @@ import com.example.bank.DTO.AccountFacade;
 import com.example.bank.DTO.AccountRequest;
 import com.example.bank.DTO.AccountResponse;
 import com.example.bank.exception.CustomException;
+import com.example.bank.exception.NotFoundException;
 import com.example.bank.model.Account;
 import com.example.bank.model.Customer;
 import com.example.bank.repository.AccountRepository;
@@ -32,7 +33,7 @@ public class AccountService {
     }
 
     public AccountResponse getById(long id) {
-        Account account = accountRepository.findById(id).orElseThrow(() -> new Error("Account not found"));
+        Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException("Account not found"));
         return accountFacade.toResponse(account);
     }
 
@@ -47,7 +48,7 @@ public class AccountService {
     }
 
     public AccountResponse addAccount(long customerId, AccountRequest accountRequest) {
-        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new CustomException("Customer not found"));
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new NotFoundException("Customer not found"));
         Account account = accountFacade.toEntity(accountRequest);
         account.setCustomer(customer);
         Account savedAccount = accountRepository.save(account);
@@ -69,7 +70,7 @@ public class AccountService {
         Account account = getByNumber(accountNumber);
 
         if (account.getBalance() < amount) {
-            throw new CustomException("Not enough money");
+            throw new NotFoundException("Account not found");
         }
         Account savedAccount = changeBalance(account, -1 * amount);
 

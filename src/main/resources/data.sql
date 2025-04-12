@@ -32,6 +32,17 @@ CREATE TABLE employers (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE users (
+   id bigint NOT NULL AUTO_INCREMENT,
+   email varchar(100) NOT NULL,
+   password varchar(100) NOT NULL,
+   username varchar(100) NOT NULL,
+   created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   last_modified_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+   PRIMARY KEY (id),
+   UNIQUE (email)
+ );
+
 CREATE TABLE customer_employer (
   customer_id bigint DEFAULT NULL,
   employer_id bigint DEFAULT NULL

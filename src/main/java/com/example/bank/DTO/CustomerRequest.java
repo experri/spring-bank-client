@@ -3,10 +3,14 @@ package com.example.bank.DTO;
 import com.example.bank.validation.FullUpdate;
 import com.example.bank.validation.PartialUpdate;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CustomerRequest {
     private long id;
 

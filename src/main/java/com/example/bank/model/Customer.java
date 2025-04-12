@@ -3,18 +3,22 @@ package com.example.bank.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
 @Table(name = "customers")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true, exclude = {"accounts", "employers"})
 public class Customer extends AbstractEntity{
 
@@ -34,6 +38,9 @@ public class Customer extends AbstractEntity{
     @Column(length = 20)
     private String phone;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "customer", orphanRemoval = true)
+    private List<Account> accounts = new ArrayList<>();
+
     @ManyToMany
     @JoinTable(
             name = "customer_employer",
@@ -41,14 +48,4 @@ public class Customer extends AbstractEntity{
             inverseJoinColumns = @JoinColumn(name = "employer_id")
     )
     private Set<Employer> employers = new HashSet<>();
-
-   @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Account> accounts = new HashSet<>();
-
-
-    public Customer(String name, String email, int age) {
-        this.name = name;
-        this.email = email;
-        this.age = age;
-    }
 }

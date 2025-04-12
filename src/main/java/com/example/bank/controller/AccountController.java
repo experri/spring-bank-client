@@ -1,8 +1,11 @@
 package com.example.bank.controller;
 
 
+import com.example.bank.DTO.AccountRequest;
 import com.example.bank.service.AccountService;
+import com.example.bank.util.ResponseHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,25 +17,31 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping("/{accountNumber}/deposit")
-    public ResponseEntity<String> deposit(@PathVariable String accountNumber, @RequestParam("amount") double amount) {
+    public ResponseEntity<Object> deposit(@PathVariable String accountNumber, @RequestParam("amount") double amount) {
         if (amount <= 0) {
-            return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
+            return ResponseHandler.generateResponse(
+                    HttpStatus.BAD_REQUEST,
+                    true,
+                    "Amount should be greater than 0",
+                    null
+            );
         }
-        accountService.deposit(accountNumber, amount);
-        return ResponseEntity.ok("Рахунок поповнено на " + amount);
+
+        return ResponseEntity.ok(accountService.deposit(accountNumber, amount));
     }
 
     @PostMapping("/{accountNumber}/withdraw")
-    public ResponseEntity<String> withdraw(@PathVariable String accountNumber, @RequestParam double amount) {
+    public ResponseEntity<Object> withdraw(@PathVariable String number, @RequestParam("amount") double amount) {
         if (amount <= 0) {
-            return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
+            return ResponseHandler.generateResponse(
+                    HttpStatus.BAD_REQUEST,
+                    true,
+                    "Amount should be greater than 0",
+                    null
+            );
         }
-        try {
-            accountService.withdraw(accountNumber, amount);
-            return ResponseEntity.ok("З рахунку знято " + amount);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(accountService.withdraw(number, amount));
+
     }
 
     @PostMapping("/transfer")
@@ -47,4 +56,28 @@ public class AccountController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PatchMapping("/{number}/transfer")
+    public ResponseEntity<Object> transfer(@PathVariable String number, @RequestBody AccountRequest accountRequest) {
+        double amount = accountRequest.getAmount();
+
+        if (amount <= 0) {
+            return ResponseHandler.generateResponse(
+                    HttpStatus.BAD_REQUEST,
+                    true,
+                    "Amount should be greater than 0",
+                    null
+            );
+        }
+
+        accountService.withdraw(number, amount);
+        accountService.deposit(accountRequest.getNumber(), amount);
+        return ResponseHandler.generateResponse(
+                HttpStatus.OK,
+                false,
+                "Transfer successful",
+                null
+        );
+    }
 }
+

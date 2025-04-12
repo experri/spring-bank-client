@@ -4,6 +4,7 @@ import com.example.bank.DTO.EmployerFacade;
 import com.example.bank.DTO.EmployerRequest;
 import com.example.bank.DTO.EmployerResponse;
 import com.example.bank.exception.CustomException;
+import com.example.bank.exception.NotFoundException;
 import com.example.bank.model.Employer;
 import com.example.bank.repository.EmployerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class EmployerService {
     }
 
     public EmployerResponse getById(long id) {
-        Employer employer = employerRepository.findById(id).orElseThrow(() -> new CustomException("Employer hasn't been found!"));
+        Employer employer = employerRepository.findById(id).orElseThrow(() -> new NotFoundException("Employer hasn't been found!"));
 
         return employerFacade.toResponse(employer);
     }

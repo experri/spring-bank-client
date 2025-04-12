@@ -22,7 +22,7 @@ public class Account extends AbstractEntity {
     private String accountNumber;
 
     @Column(columnDefinition = "double default 0")
-    private Double balance;
+    private double balance;
 
     @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
@@ -33,41 +33,9 @@ public class Account extends AbstractEntity {
     private Currency currency;
 
 
-    public Account(Customer customer, Currency currency) {
-        this.customer = customer;
+    public Account(Currency currency, Customer customer) {
         this.currency = currency;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
-    }
-
-    public Double getBalance() {
-        return balance;
-    }
-
-    public void setBalance(Double balance) {
-        this.balance = balance;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
         this.customer = customer;
-    }
-
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
     }
 }
 
