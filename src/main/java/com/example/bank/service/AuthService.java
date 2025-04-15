@@ -33,4 +33,7 @@ public class AuthService {
 
         return user.isPresent();
     }
+    public boolean isValidPassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
 }

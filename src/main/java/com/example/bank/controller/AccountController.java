@@ -2,23 +2,29 @@ package com.example.bank.controller;
 
 
 import com.example.bank.DTO.AccountRequest;
+import com.example.bank.DTO.AccountResponse;
 import com.example.bank.service.AccountService;
+import com.example.bank.service.WebSocketService;
 import com.example.bank.util.ResponseHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/accounts")
 @RequiredArgsConstructor
 public class AccountController {
 
     private final AccountService accountService;
+    private final WebSocketService webSocketService;
 
     @PostMapping("/{accountNumber}/deposit")
     public ResponseEntity<Object> deposit(@PathVariable String accountNumber, @RequestParam("amount") double amount) {
         if (amount <= 0) {
+            logNegativeAmount(amount);
             return ResponseHandler.generateResponse(
                     HttpStatus.BAD_REQUEST,
                     true,
@@ -27,12 +33,19 @@ public class AccountController {
             );
         }
 
-        return ResponseEntity.ok(accountService.deposit(accountNumber, amount));
+        log.info("Depositing {} to account {}", amount, accountNumber);
+
+        AccountResponse accountUpdated = accountService.deposit(accountNumber, amount);
+
+        webSocketService.sendAccountUpdate(accountNumber, accountUpdated.getBalance());
+
+        return ResponseEntity.ok(accountUpdated);
     }
 
     @PostMapping("/{accountNumber}/withdraw")
     public ResponseEntity<Object> withdraw(@PathVariable String number, @RequestParam("amount") double amount) {
         if (amount <= 0) {
+            logNegativeAmount(amount);
             return ResponseHandler.generateResponse(
                     HttpStatus.BAD_REQUEST,
                     true,
@@ -40,28 +53,21 @@ public class AccountController {
                     null
             );
         }
-        return ResponseEntity.ok(accountService.withdraw(number, amount));
+        log.info("Withdrawing {} from account {}", amount, number);
 
+        AccountResponse accountUpdated = accountService.withdraw(number, amount);
+
+        webSocketService.sendAccountUpdate(number, accountUpdated.getBalance());
+
+        return ResponseEntity.ok(accountUpdated);
     }
 
-    @PostMapping("/transfer")
-    public ResponseEntity<String> transfer(@RequestParam String fromAccountNumber, @RequestParam String toAccountNumber, @RequestParam double amount) {
-        if (amount <= 0) {
-            return ResponseEntity.badRequest().body("Сума повинна бути більшою за 0");
-        }
-        try {
-            accountService.transfer(fromAccountNumber, toAccountNumber, amount);
-            return ResponseEntity.ok("Переказано " + amount + " з рахунку " + fromAccountNumber + " на рахунок " + toAccountNumber);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PatchMapping("/{number}/transfer")
+    @PostMapping("/{number}/transfer")
     public ResponseEntity<Object> transfer(@PathVariable String number, @RequestBody AccountRequest accountRequest) {
         double amount = accountRequest.getAmount();
 
         if (amount <= 0) {
+            logNegativeAmount(amount);
             return ResponseHandler.generateResponse(
                     HttpStatus.BAD_REQUEST,
                     true,
@@ -70,14 +76,28 @@ public class AccountController {
             );
         }
 
-        accountService.withdraw(number, amount);
-        accountService.deposit(accountRequest.getNumber(), amount);
+        AccountResponse accountFrom = accountService.withdraw(number, amount);
+        AccountResponse accountTo = accountService.deposit(accountRequest.getNumber(), amount);
+
+        webSocketService.sendAccountUpdate(accountFrom.getNumber(), accountFrom.getBalance());
+        webSocketService.sendAccountUpdate(accountTo.getNumber(), accountTo.getBalance());
+
+        log.info(
+                "Transferring {} from account {} to account {}",
+                amount,
+                number,
+                accountRequest.getNumber()
+        );
         return ResponseHandler.generateResponse(
                 HttpStatus.OK,
                 false,
                 "Transfer successful",
                 null
         );
+    }
+
+    private void logNegativeAmount(double amount) {
+        log.info("Amount {} should be greater than 0", amount);
     }
 }
 
